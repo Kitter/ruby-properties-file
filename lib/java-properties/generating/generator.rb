@@ -29,19 +29,25 @@ module JavaProperties
       def self.generate(properties, options = {})
         options = DEFAULT_OPTIONS.merge(options)
         lines = []
-        properties.each do |key, value|
-          lines << build_line(key, value, options)
+        properties.each do |k, v|
+          build_group(k, v, lines, options)
         end
         lines.join("\n")
       end
 
       private
 
-      def self.build_line(key, value, options)
-        encoded_key   = Encoding.encode!(key.to_s.dup,   *encoding_skips(false, options))
-        encoded_value = Encoding.encode!(value.to_s.dup, *encoding_skips(true,  options))
+      def self.build_group(key, current_nest, lines, options)
+        if current_nest.class == Hash
+          current_nest.each do |k, v|
+            build_group(key + "." + k, v, lines, options)
+          end
+        else
+          encoded_key   = Encoding.encode!(key.to_s.dup,   *encoding_skips(false, options))
+          encoded_value = Encoding.encode!(current_nest.to_s.dup, *encoding_skips(true,  options))
 
-        encoded_key + KEY_VALUE_SEPARATOR + encoded_value
+          lines << encoded_key + KEY_VALUE_SEPARATOR + encoded_value
+        end
       end
 
       def self.encoding_skips(is_value, options)

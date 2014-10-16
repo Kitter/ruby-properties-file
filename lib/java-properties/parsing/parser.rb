@@ -54,11 +54,22 @@ module JavaProperties
       end
 
       def self.append_to_properties(properties, key, value)
-        unless key.nil? && value.nil?
-          properties[Encoding.decode!(key).to_sym] = Encoding.decode!(value, Encoding::SKIP_SEPARATORS)
+        return if key.nil? || value.nil?
+
+        keys = key.split(".").map { |k| Encoding.decode!(k) }
+        current_nest = properties
+        while k = keys.shift
+          if keys.size == 0
+            current_nest[k] = Encoding.decode!(value, Encoding::SKIP_SEPARATORS)
+          else
+            if !current_nest.has_key? k
+              current_nest[k] = {}
+            end
+          end
+
+          current_nest = current_nest[k]
         end
       end
-
     end
   end
 end
